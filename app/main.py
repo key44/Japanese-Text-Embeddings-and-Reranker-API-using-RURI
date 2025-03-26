@@ -171,6 +171,52 @@ async def rerank(request: RerankRequest):
         logger.error(f"Rerank error: {str(e)}")
         raise HTTPException(status_code=400, detail=str(e))
 
+@app.post("/rerank")
+async def rerank(request: RerankRequest):
+    try:
+        # リクエスト内容のログ記録
+        logger.info(f"Received rerank request: {request}")
+        
+        # クエリと文書のペアを作成
+        query = request.get_query()
+        pairs = [[query, doc] for doc in request.documents]
+        
+        # スコアリング
+        scores = reranker_model.predict(pairs)
+        
+        # 結果をフォーマット - OpenAI互換形式に変更
+        results = []
+        for i, score in enumerate(scores):
+            results.append({
+                "index": i,
+                "relevance_score": float(score),
+                "document": request.documents[i] if request.return_documents else None,
+            })
+        
+        # スコアで降順ソート
+        results = sorted(results, key=lambda x: x["relevance_score"], reverse=True)
+        
+        # top_nが指定されている場合は上位N件のみ返す
+        if request.top_n:
+            results = results[:request.top_n]
+            
+        # OpenAI互換のレスポンス形式
+        response = {
+            "object": "list",
+            "model": request.model,
+            "results": results,
+            "usage": {
+                "prompt_tokens": 0,
+                "total_tokens": 0
+            }
+        }
+        
+        logger.info(f"Returning response: {response}")
+        return response
+    except Exception as e:
+        logger.error(f"Rerank error: {str(e)}")
+        raise HTTPException(status_code=400, detail=str(e))
+
 # 類似度計算エンドポイント - 独自API
 @app.post("/similarity")
 async def calculate_similarity(request: Request):
