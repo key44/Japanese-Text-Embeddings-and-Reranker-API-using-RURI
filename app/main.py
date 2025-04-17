@@ -33,12 +33,24 @@ if device == "cuda":
     logger.info(f"GPU Memory: {torch.cuda.get_device_properties(0).total_memory / 1e9:.2f} GB")
 
 # モデルをロード
-embedding_model = SentenceTransformer("cl-nagoya/ruri-large-v2")
-embedding_model.to(device)  # モデルをGPUに移動（利用可能な場合）
+# サポートする埋め込みモデルのロード
+default_embedding_model_name = "cl-nagoya/ruri-large-v2"
+embedding_models = {
+    default_embedding_model_name: SentenceTransformer(default_embedding_model_name),
+    "cl-nagoya/ruri-v3-pt-310m": SentenceTransformer("cl-nagoya/ruri-v3-pt-310m"),
+}
+for model in embedding_models.values():
+    model.to(device)
 
-reranker_model = CrossEncoder("cl-nagoya/ruri-reranker-large")
-if device == "cuda":
-    reranker_model.model.to(device)
+# サポートするリランカーモデルのロード
+default_reranker_model_name = "cl-nagoya/ruri-reranker-large"
+reranker_models = {
+    default_reranker_model_name: CrossEncoder(default_reranker_model_name),
+    "cl-nagoya/ruri-v3-reranker-310m": CrossEncoder("cl-nagoya/ruri-v3-reranker-310m"),
+}
+for model in reranker_models.values():
+    if device == "cuda":
+        model.model.to(device)
 
 # OpenAI互換のリクエスト形式
 class RerankRequest(BaseModel):
@@ -85,6 +97,10 @@ async def debug_request(request: Request):
 async def create_embeddings(request: Request):
     try:
         body = await request.json()
+        model_name = body.get("model", default_embedding_model_name)
+        if model_name not in embedding_models:
+            raise HTTPException(status_code=400, detail=f"Unsupported embedding model: {model_name}")
+        model = embedding_models[model_name]
         input_texts = body.get("input", [])
         
         if isinstance(input_texts, str):
@@ -99,7 +115,7 @@ async def create_embeddings(request: Request):
             processed_texts.append(text)
         
         # embeddings生成
-        embeddings = embedding_model.encode(processed_texts)
+        embeddings = model.encode(processed_texts)
         embeddings_list = embeddings.tolist()
         
         # OpenAI互換のレスポンス形式
@@ -111,7 +127,7 @@ async def create_embeddings(request: Request):
                     "object": "embedding"
                 } for i, emb in enumerate(embeddings_list)
             ],
-            "model": "cl-nagoya/ruri-large-v2",
+            "model": model_name,
             "object": "list",
             "usage": {
                 "prompt_tokens": len(" ".join(processed_texts).split()),
@@ -131,12 +147,18 @@ async def rerank(request: RerankRequest):
         # リクエスト内容のログ記録
         logger.info(f"Received rerank request: {request}")
         
+        # モデルの選択
+        model_name = request.model or default_reranker_model_name
+        if model_name not in reranker_models:
+            raise HTTPException(status_code=400, detail=f"Unsupported reranker model: {model_name}")
+        model = reranker_models[model_name]
+        
         # クエリと文書のペアを作成
         query = request.get_query()
         pairs = [[query, doc] for doc in request.documents]
-        
+                
         # スコアリング
-        scores = reranker_model.predict(pairs)
+        scores = model.predict(pairs)
         
         # 結果をフォーマット - OpenAI互換形式に変更
         results = []
@@ -157,7 +179,7 @@ async def rerank(request: RerankRequest):
         # OpenAI互換のレスポンス形式
         response = {
             "object": "list",
-            "model": request.model,
+            "model": model_name,
             "results": results,
             "usage": {
                 "prompt_tokens": 0,
@@ -177,12 +199,18 @@ async def rerank(request: RerankRequest):
         # リクエスト内容のログ記録
         logger.info(f"Received rerank request: {request}")
         
+        # モデルの選択
+        model_name = request.model or default_reranker_model_name
+        if model_name not in reranker_models:
+            raise HTTPException(status_code=400, detail=f"Unsupported reranker model: {model_name}")
+        model = reranker_models[model_name]
+        
         # クエリと文書のペアを作成
         query = request.get_query()
         pairs = [[query, doc] for doc in request.documents]
-        
+                
         # スコアリング
-        scores = reranker_model.predict(pairs)
+        scores = model.predict(pairs)
         
         # 結果をフォーマット - OpenAI互換形式に変更
         results = []
@@ -203,7 +231,7 @@ async def rerank(request: RerankRequest):
         # OpenAI互換のレスポンス形式
         response = {
             "object": "list",
-            "model": request.model,
+            "model": model_name,
             "results": results,
             "usage": {
                 "prompt_tokens": 0,
@@ -235,7 +263,7 @@ async def calculate_similarity(request: Request):
         processed_texts.append(text)
 
     # embeddings生成
-    embeddings = embedding_model.encode(processed_texts, convert_to_tensor=True)
+    embeddings = embedding_models[default_embedding_model_name].encode(processed_texts, convert_to_tensor=True)
 
     # コサイン類似度の計算
     similarity_matrix = F.cosine_similarity(
@@ -248,6 +276,29 @@ async def calculate_similarity(request: Request):
         "similarity_matrix": similarity_matrix,
         "texts": processed_texts,
         "device": device
+    }
+
+# pipeline_tag: sentence-similarity エンドポイント
+@app.post("/sentence-similarity")
+async def sentence_similarity_endpoint(request: Request):
+    # 既存の /similarity ロジックを再利用
+    return await calculate_similarity(request)
+
+# pipeline_tag: text-ranking エンドポイント
+@app.post("/text-ranking")
+async def text_ranking_endpoint(request: Request):
+    data = await request.json()
+    query = data.get("query")
+    corpus = data.get("corpus")
+    if query is None or corpus is None:
+        raise HTTPException(status_code=400, detail="Both 'query' and 'corpus' must be provided")
+    if isinstance(corpus, str):
+        corpus = [corpus]
+    # v3モデルを使用してリランキング
+    model = reranker_models["cl-nagoya/ruri-v3-reranker-310m"]
+    results = model.rank(query=query, documents=corpus)
+    return {
+        "results": results
     }
 
 @app.get("/health")

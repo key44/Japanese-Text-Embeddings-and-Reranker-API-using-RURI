@@ -162,6 +162,8 @@ APIは次のエンドポイントを提供します。
     ```
 
 *   **`/similarity` (POST):** テキストのリスト間のコサイン類似度を計算します。これはカスタムエンドポイントです。
+*   **`/sentence-similarity` (POST):** `/similarity`と同じロジックを再利用するエンドポイントです。（`sentence-similarity` パイプラインタグ）
+*   **`/text-ranking` (POST):** `query`と`corpus`を受け取り、`text-ranking`パイプラインタグの `cl-nagoya/ruri-v3-reranker-310m`モデルを使用してランキングを行うエンドポイントです。
 
     リクエストボディ（例）：
 

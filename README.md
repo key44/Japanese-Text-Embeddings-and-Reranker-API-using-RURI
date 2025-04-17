@@ -163,6 +163,8 @@ The API provides the following endpoints:
     ```
 
 *   **`/similarity` (POST):** Calculates the cosine similarity between a list of texts. This is a custom endpoint.
+*   **`/sentence-similarity` (POST):** Reuses `/similarity` logic under the `sentence-similarity` pipeline tag.
+*   **`/text-ranking` (POST):** Accepts `query` and `corpus`, ranks documents using the `text-ranking` pipeline tag with the `cl-nagoya/ruri-v3-reranker-310m` model.
 
     Request Body (example):
 
