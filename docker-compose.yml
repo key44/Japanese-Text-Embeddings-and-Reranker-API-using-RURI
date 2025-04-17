@@ -5,9 +5,6 @@ services:
       dockerfile: Dockerfile
     ports:
       - "8100:8000"
-    volumes:
-      # Docker管理のボリュームを使用
-      - model-cache:/root/.cache/torch/sentence_transformers
     restart: unless-stopped
     # GPUを有効化
     deploy:
@@ -20,7 +17,3 @@ services:
     environment:
       - NVIDIA_VISIBLE_DEVICES=all
       - CUDA_VISIBLE_DEVICES=0
-
-# Docker管理のボリュームを定義
-volumes:
-  model-cache:

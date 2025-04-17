@@ -12,13 +12,16 @@ This is a FastAPI application providing Japanese text embeddings and reranking c
 *   **Health Check:** A `/health` endpoint provides information about the API's status, including the models used and device availability (CPU/CUDA).
 *   **Dockerized:** The application is designed to be run within a Docker container, making deployment and scaling easy.
 *   **GPU Support:** The application automatically utilizes a GPU if available, falling back to CPU if not.
+*   **v3 Model Support:** The `/v1/embeddings` and `/v1/rerank` endpoints accept `cl-nagoya/ruri-v3-pt-310m` and `cl-nagoya/ruri-v3-reranker-310m` as model names.
 
 ## Models
 
 This application utilizes the following models:
 
 *   **Embedding Model:** `cl-nagoya/ruri-large-v2` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-large-v2))
+*   **Embedding Model (v3):** `cl-nagoya/ruri-v3-pt-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-pt-310m))
 *   **Reranker Model:** `cl-nagoya/ruri-reranker-large` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-reranker-large))
+*   **Reranker Model (v3):** `cl-nagoya/ruri-v3-reranker-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-reranker-310m))
 
 These models are based on the research presented in:
 

@@ -10,13 +10,16 @@
 *   **ヘルスチェック:** `/health`エンドポイントは、使用されているモデルやデバイスの可用性（CPU/CUDA）など、APIのステータスに関する情報を提供します。
 *   **Docker化:** アプリケーションはDockerコンテナ内で実行するように設計されており、デプロイとスケーリングが容易です。
 *   **GPUサポート:** アプリケーションは、利用可能な場合は自動的にGPUを利用し、利用できない場合はCPUにフォールバックします。
+*   **v3モデル対応:** `/v1/embeddings` と `/v1/rerank` エンドポイントで、`cl-nagoya/ruri-v3-pt-310m` および `cl-nagoya/ruri-v3-reranker-310m` が指定可能
 
 ## モデル
 
 このアプリケーションは、次のモデルを利用しています。
 
 *   **埋め込みモデル:** `cl-nagoya/ruri-large-v2` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-large-v2))
+*   **埋め込みモデル(v3):** `cl-nagoya/ruri-v3-pt-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-pt-310m))
 *   **リランカーモデル:** `cl-nagoya/ruri-reranker-large` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-reranker-large))
+*   **リランカーモデル(v3):** `cl-nagoya/ruri-v3-reranker-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-reranker-310m))
 
 これらのモデルは、以下の研究に基づいています。
 
