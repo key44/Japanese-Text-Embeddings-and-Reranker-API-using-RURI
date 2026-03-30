@@ -34,19 +34,17 @@ if device == "cuda":
 
 # モデルをロード
 # サポートする埋め込みモデルのロード
-default_embedding_model_name = "cl-nagoya/ruri-large-v2"
+default_embedding_model_name = "cl-nagoya/ruri-v3-pt-310m"
 embedding_models = {
     default_embedding_model_name: SentenceTransformer(default_embedding_model_name),
-    "cl-nagoya/ruri-v3-pt-310m": SentenceTransformer("cl-nagoya/ruri-v3-pt-310m"),
 }
 for model in embedding_models.values():
     model.to(device)
 
 # サポートするリランカーモデルのロード
-default_reranker_model_name = "cl-nagoya/ruri-reranker-large"
+default_reranker_model_name = "cl-nagoya/ruri-v3-reranker-310m"
 reranker_models = {
     default_reranker_model_name: CrossEncoder(default_reranker_model_name),
-    "cl-nagoya/ruri-v3-reranker-310m": CrossEncoder("cl-nagoya/ruri-v3-reranker-310m"),
 }
 for model in reranker_models.values():
     if device == "cuda":
@@ -75,8 +73,8 @@ class RerankRequest(BaseModel):
 def read_root():
     return {
         "message": "Japanese Embeddings and Reranker API is running",
-        "embedding_model": "cl-nagoya/ruri-large-v2",
-        "reranker_model": "cl-nagoya/ruri-reranker-large",
+        "embedding_model": default_embedding_model_name,
+        "reranker_model": default_reranker_model_name,
         "device": device,
         "cuda_available": torch.cuda.is_available(),
         "gpu_info": torch.cuda.get_device_name(0) if torch.cuda.is_available() else "N/A"
@@ -294,8 +292,8 @@ async def text_ranking_endpoint(request: Request):
         raise HTTPException(status_code=400, detail="Both 'query' and 'corpus' must be provided")
     if isinstance(corpus, str):
         corpus = [corpus]
-    # v3モデルを使用してリランキング
-    model = reranker_models["cl-nagoya/ruri-v3-reranker-310m"]
+    # リランカーモデルを使用してリランキング
+    model = reranker_models[default_reranker_model_name]
     results = model.rank(query=query, documents=corpus)
     return {
         "results": results
@@ -307,8 +305,8 @@ def health_check():
         "status": "healthy",
         "device": device,
         "cuda_available": torch.cuda.is_available(),
-        "embedding_model": "cl-nagoya/ruri-large-v2",
-        "reranker_model": "cl-nagoya/ruri-reranker-large"
+        "embedding_model": default_embedding_model_name,
+        "reranker_model": default_reranker_model_name
     }
 
 # サーバー起動用のコード

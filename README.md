@@ -6,22 +6,20 @@ This is a FastAPI application providing Japanese text embeddings and reranking c
 
 ## Features
 
-*   **Embeddings:** Generate embeddings for Japanese text using the `cl-nagoya/ruri-large-v2` model. The API provides an OpenAI-compatible `/v1/embeddings` endpoint.
-*   **Reranking:** Rerank search results or other document lists based on a query using the `cl-nagoya/ruri-reranker-large` model. The API provides an OpenAI-compatible `/v1/rerank` endpoint.
+*   **Embeddings:** Generate embeddings for Japanese text using the `cl-nagoya/ruri-v3-pt-310m` model. The API provides an OpenAI-compatible `/v1/embeddings` endpoint.
+*   **Reranking:** Rerank search results or other document lists based on a query using the `cl-nagoya/ruri-v3-reranker-310m` model. The API provides an OpenAI-compatible `/v1/rerank` endpoint.
 *   **Similarity Calculation:** Calculate the cosine similarity between texts using a custom `/similarity` endpoint.
 *   **Health Check:** A `/health` endpoint provides information about the API's status, including the models used and device availability (CPU/CUDA).
 *   **Dockerized:** The application is designed to be run within a Docker container, making deployment and scaling easy.
 *   **GPU Support:** The application automatically utilizes a GPU if available, falling back to CPU if not.
-*   **v3 Model Support:** The `/v1/embeddings` and `/v1/rerank` endpoints accept `cl-nagoya/ruri-v3-pt-310m` and `cl-nagoya/ruri-v3-reranker-310m` as model names.
+*   **Default models:** The API defaults to `cl-nagoya/ruri-v3-pt-310m` for embeddings and `cl-nagoya/ruri-v3-reranker-310m` for reranking. You can still specify a different supported model by name in request bodies.
 
 ## Models
 
-This application utilizes the following models:
+This application utilizes the following models by default:
 
-*   **Embedding Model:** `cl-nagoya/ruri-large-v2` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-large-v2))
-*   **Embedding Model (v3):** `cl-nagoya/ruri-v3-pt-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-pt-310m))
-*   **Reranker Model:** `cl-nagoya/ruri-reranker-large` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-reranker-large))
-*   **Reranker Model (v3):** `cl-nagoya/ruri-v3-reranker-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-reranker-310m))
+*   **Embedding Model:** `cl-nagoya/ruri-v3-pt-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-pt-310m))
+*   **Reranker Model:** `cl-nagoya/ruri-v3-reranker-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-reranker-310m))
 
 These models are based on the research presented in:
 
@@ -76,8 +74,8 @@ The API provides the following endpoints:
     ```json
     {
         "message": "Japanese Embeddings and Reranker API is running",
-        "embedding_model": "cl-nagoya/ruri-large-v2",
-        "reranker_model": "cl-nagoya/ruri-reranker-large",
+        "embedding_model": "cl-nagoya/ruri-v3-pt-310m",
+        "reranker_model": "cl-nagoya/ruri-v3-reranker-310m",
         "device": "cuda",
         "cuda_available": true,
         "gpu_info": "NVIDIA GeForce RTX 3090"
@@ -91,7 +89,7 @@ The API provides the following endpoints:
     ```json
     {
         "input": ["文章: これはテストです", "クエリ: 日本語の埋め込み"],
-        "model": "cl-nagoya/ruri-large-v2"
+        "model": "cl-nagoya/ruri-v3-pt-310m"
     }
     ```
 
@@ -114,7 +112,7 @@ The API provides the following endpoints:
                 "object": "embedding"
             }
         ],
-        "model": "cl-nagoya/ruri-large-v2",
+        "model": "cl-nagoya/ruri-v3-pt-310m",
         "object": "list",
         "usage": {
             "prompt_tokens": 10,
@@ -128,12 +126,12 @@ The API provides the following endpoints:
     Request Body (example):
 
     ```json
-    {
-      "query": "類似度計算",
-      "documents": ["ドキュメント1", "類似度を計算する方法", "FastAPIについて"],
-      "model": "cl-nagoya/ruri-reranker-large",
-      "top_n": 2
-    }
+        {
+            "query": "類似度計算",
+            "documents": ["ドキュメント1", "類似度を計算する方法", "FastAPIについて"],
+            "model": "cl-nagoya/ruri-v3-reranker-310m",
+            "top_n": 2
+        }
     ```
 
     *   `query` or `input` is required.
@@ -145,7 +143,7 @@ The API provides the following endpoints:
     ```json
     {
         "object": "list",
-        "model": "cl-nagoya/ruri-reranker-large",
+        "model": "cl-nagoya/ruri-v3-reranker-310m",
         "results": [
             {
                 "index": 1,
@@ -201,8 +199,8 @@ The API provides the following endpoints:
         "status": "healthy",
         "device": "cuda",
         "cuda_available": true,
-        "embedding_model": "cl-nagoya/ruri-large-v2",
-        "reranker_model": "cl-nagoya/ruri-reranker-large"
+        "embedding_model": "cl-nagoya/ruri-v3-pt-310m",
+        "reranker_model": "cl-nagoya/ruri-v3-reranker-310m"
     }
     ```
 

@@ -4,22 +4,20 @@
 
 ## 機能
 
-*   **埋め込み:** `cl-nagoya/ruri-large-v2`モデルを使用して日本語テキストの埋め込みを生成します。APIはOpenAI互換の`/v1/embeddings`エンドポイントを提供します。
-*   **リランキング:** `cl-nagoya/ruri-reranker-large`モデルを使用して、クエリに基づいて検索結果やその他のドキュメントリストをリランキングします。APIはOpenAI互換の`/v1/rerank`エンドポイントを提供します。
+*   **埋め込み:** `cl-nagoya/ruri-v3-pt-310m`モデルを使用して日本語テキストの埋め込みを生成します。APIはOpenAI互換の`/v1/embeddings`エンドポイントを提供します。
+*   **リランキング:** `cl-nagoya/ruri-v3-reranker-310m`モデルを使用して、クエリに基づいて検索結果やその他のドキュメントリストをリランキングします。APIはOpenAI互換の`/v1/rerank`エンドポイントを提供します。
 *   **類似度計算:** カスタムの`/similarity`エンドポイントを使用して、テキスト間のコサイン類似度を計算します。
 *   **ヘルスチェック:** `/health`エンドポイントは、使用されているモデルやデバイスの可用性（CPU/CUDA）など、APIのステータスに関する情報を提供します。
 *   **Docker化:** アプリケーションはDockerコンテナ内で実行するように設計されており、デプロイとスケーリングが容易です。
 *   **GPUサポート:** アプリケーションは、利用可能な場合は自動的にGPUを利用し、利用できない場合はCPUにフォールバックします。
-*   **v3モデル対応:** `/v1/embeddings` と `/v1/rerank` エンドポイントで、`cl-nagoya/ruri-v3-pt-310m` および `cl-nagoya/ruri-v3-reranker-310m` が指定可能
+*   **デフォルトモデル:** APIは埋め込みに `cl-nagoya/ruri-v3-pt-310m`、リランキングに `cl-nagoya/ruri-v3-reranker-310m` をデフォルトで使用します。リクエストでモデル名を指定することもできます。
 
 ## モデル
 
 このアプリケーションは、次のモデルを利用しています。
 
-*   **埋め込みモデル:** `cl-nagoya/ruri-large-v2` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-large-v2))
-*   **埋め込みモデル(v3):** `cl-nagoya/ruri-v3-pt-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-pt-310m))
-*   **リランカーモデル:** `cl-nagoya/ruri-reranker-large` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-reranker-large))
-*   **リランカーモデル(v3):** `cl-nagoya/ruri-v3-reranker-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-reranker-310m))
+*   **埋め込みモデル（デフォルト）:** `cl-nagoya/ruri-v3-pt-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-pt-310m))
+*   **リランカーモデル（デフォルト）:** `cl-nagoya/ruri-v3-reranker-310m` ([Hugging Face](https://huggingface.co/cl-nagoya/ruri-v3-reranker-310m))
 
 これらのモデルは、以下の研究に基づいています。
 
@@ -74,8 +72,8 @@ APIは次のエンドポイントを提供します。
     ```json
     {
         "message": "Japanese Embeddings and Reranker API is running",
-        "embedding_model": "cl-nagoya/ruri-large-v2",
-        "reranker_model": "cl-nagoya/ruri-reranker-large",
+        "embedding_model": "cl-nagoya/ruri-v3-pt-310m",
+        "reranker_model": "cl-nagoya/ruri-v3-reranker-310m",
         "device": "cuda",
         "cuda_available": true,
         "gpu_info": "NVIDIA GeForce RTX 3090"
@@ -89,7 +87,7 @@ APIは次のエンドポイントを提供します。
     ```json
     {
         "input": ["文章: これはテストです", "クエリ: 日本語の埋め込み"],
-        "model": "cl-nagoya/ruri-large-v2"
+        "model": "cl-nagoya/ruri-v3-pt-310m"
     }
     ```
 
@@ -112,7 +110,7 @@ APIは次のエンドポイントを提供します。
                 "object": "embedding"
             }
         ],
-        "model": "cl-nagoya/ruri-large-v2",
+        "model": "cl-nagoya/ruri-v3-pt-310m",
         "object": "list",
         "usage": {
             "prompt_tokens": 10,
@@ -126,12 +124,12 @@ APIは次のエンドポイントを提供します。
     リクエストボディ（例）：
 
     ```json
-    {
-      "query": "類似度計算",
-      "documents": ["ドキュメント1", "類似度を計算する方法", "FastAPIについて"],
-      "model": "cl-nagoya/ruri-reranker-large",
-      "top_n": 2
-    }
+        {
+            "query": "類似度計算",
+            "documents": ["ドキュメント1", "類似度を計算する方法", "FastAPIについて"],
+            "model": "cl-nagoya/ruri-v3-reranker-310m",
+            "top_n": 2
+        }
     ```
 
     *   `query`または`input`が必要です。
@@ -144,7 +142,7 @@ APIは次のエンドポイントを提供します。
     ```json
     {
         "object": "list",
-        "model": "cl-nagoya/ruri-reranker-large",
+        "model": "cl-nagoya/ruri-v3-reranker-310m",
         "results": [
             {
                 "index": 1,
@@ -200,8 +198,8 @@ APIは次のエンドポイントを提供します。
         "status": "healthy",
         "device": "cuda",
         "cuda_available": true,
-        "embedding_model": "cl-nagoya/ruri-large-v2",
-        "reranker_model": "cl-nagoya/ruri-reranker-large"
+        "embedding_model": "cl-nagoya/ruri-v3-pt-310m",
+        "reranker_model": "cl-nagoya/ruri-v3-reranker-310m"
     }
     ```
 
